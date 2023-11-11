@@ -121,3 +121,11 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+###########################################################################
+######### MY VARIABLES
+###########################################################################
+
+REMOTE_DB_ONLINE = False
+MANEJADOR_HC_URL = 'http://localhost:42069'
+UNSYNC_LOCAL_DB = False
