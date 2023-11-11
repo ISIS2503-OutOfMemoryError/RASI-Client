@@ -5,8 +5,19 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.conf import settings
 import requests
+import pymongo
+from django.views.decorators.csrf import csrf_exempt
+import json
 
 
+queue_client = pymongo.MongoClient("mongodb://localhost:27017/")
+dbname = queue_client['local_queue']
+collection = dbname['queries']
+
+def home(request):
+    return HttpResponse("Hello, Django!")
+
+@csrf_exempt
 def conciliacion_bd(request):
     """
     @ppedreros
@@ -15,7 +26,16 @@ def conciliacion_bd(request):
     Args:
         request (_type_): _description_
     """
-    settings.UNSYNC_LOCAL_BD = False
+    count = collection.count_documents({})
+    print(count)
+    while count != 0:
+        query = collection.find_one()
+        #post_test(query)
+        collection.delete_one({"_id":query['_id']})
+        count = collection.count_documents({})
+    print(count)
+    
+    return HttpResponse("OK")
 
 
 def is_online(request):
@@ -85,7 +105,7 @@ def heartbeat(request):
         conciliacion_bd(request)
         return HttpResponse(200)
 
-
+@csrf_exempt
 def get_test(request):
     """
     author: @c4ts0up
@@ -114,7 +134,7 @@ def get_test(request):
 
     return JsonResponse({'user_id': 1, 'external_data': response_data})
 
-
+@csrf_exempt
 def post_test(request):
     """
     auhtor: @c4ts0up
@@ -153,7 +173,9 @@ def post_test(request):
 
     return JsonResponse({'user_id': 1, 'external_data': response_data})
 
+    return HttpResponse("OK")
 
+@csrf_exempt
 def put_test(request):
     """
     author: @ppedreros
