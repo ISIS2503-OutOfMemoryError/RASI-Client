@@ -17,7 +17,7 @@ collection = dbname['queries']
 @csrf_exempt
 def conciliacion_bd(request):
     """
-    @ppedreros
+    @author: ppedreros
     Mientras se mantenga la conexión con la base de datos remota, se envían las peticiones almacenadas localmente. Se realiza hasta perder la conexión o hasta que la base de datos local quede vacía
 
     Args:
@@ -25,21 +25,28 @@ def conciliacion_bd(request):
     """
     # cuenta los documentos
     count = collection.count_documents({})
-    print(count)
 
     # mientras haya documentos por enviar
     while count != 0:
         query = collection.find_one()
+        payload = query.get('data')
+
+        print(query)
 
         # TODO! Cuidado con ciclo infinito: podría estar mandando localmente
         if query.get('method') == 'POST':
-            response = post_test(query)
+            response = post_test(payload)
         elif query.get('method') == 'PUT':
-            response = put_test(query)
+            response = put_test(payload)
+
+        print(response)
+        print(type(response))
+        data = json.loads(response.content.decode('utf-8'))
+        print("data", data)
 
         # evaluamos la respuesta
         # se perdió la conexión en conciliación
-        if response.status_code not in [200, 204]:
+        if data.get('sent_to_cloud') is False :
             break
 
         # se mantiene la conexión en conciliación
@@ -47,12 +54,9 @@ def conciliacion_bd(request):
         count = collection.count_documents({})
 
 
-    if (collection.count_documents({}) > 0):
-        settings.UNSYNC_LOCAL_DB = True
-        return HttpResponse(500)
-    else:
-        settings.UNSYNC_LOCAL_DB = False
-        return HttpResponse(200)
+    settings.UNSYNC_LOCAL_DB = (bool)(collection.count_documents({}) > 0)
+    
+    return JsonResponse({'user_id': 1, 'local_unsync_transactions': collection.count_documents({})})
 
 
 def is_online(request):
@@ -133,75 +137,101 @@ def get_test(request):
         request (_type_): _description_
     """
     url = settings.MANEJADOR_HC_URL + '/historia-clinica/1'
-    print(settings.REMOTE_DB_ONLINE)
-    
-    if not settings.REMOTE_DB_ONLINE:
-        response_data = f'Error: {503}'
-    elif settings.UNSYNC_LOCAL_DB:
-        response_data = f'Error: cambios locales todavía no se han sincronizado'
-    else:
+
+    try:
+        # cambios locales no sincronizados
+        if settings.UNSYNC_LOCAL_DB:
+            response_data = "Error: cambios locales no se han sincronizado"
+            return JsonResponse({'user_id': 1, 'external_data': response_data, 'sent_to_cloud': False}, status=500)
+
+        # intenta hacer GET a la app en nube
         response = requests.get(url)
 
+        # GET exitoso
         if response.status_code == 200:
             response_data = response.text
-        else:
-            response_data = f'Error: {response.status_code}'
+            return JsonResponse({'user_id': 1, 'external_data': response_data, 'sent_to_cloud': True}, status=200)
 
-
-    return JsonResponse({'user_id': 1, 'external_data': response_data})
+        # GET fallido
+        response_data = "Error: manejador de historias clínicas es inaccesible"
+        # no hay manera de arreglarlo
+        return JsonResponse({'user_id': 1, 'external_data': response_data, 'sent_to_cloud': False}, status=503)
+    
+    # fallo en la conexión = GET fallido
+    except:
+        response_data = "Error: manejador de historias clínicas es inaccesible"
+        # no hay manera de arreglarlo
+        return JsonResponse({'user_id': 1, 'external_data': response_data, 'sent_to_cloud': True}, status=503)
 
 
 @csrf_exempt
 def post_test(request):
     """
-    auhtor: @c4ts0up
+    author: @c4ts0up
     Hace un POST de ejemplo. Si está conectado al LB, lo manda a la app en nube. Si no, guarda la petición en la base de datos local para realizarla después
 
     Args:
         request (_type_): _description_
     """
-    url = settings.MANEJADOR_HC_URL + '/historia-clinica/create/'
+    url = settings.MANEJADOR_HC_URL + '/historia-clinica/update/1'
 
-    print(settings.REMOTE_DB_ONLINE)
-    print(request)
-    if not settings.REMOTE_DB_ONLINE or settings.UNSYNC_LOCAL_DB:
-        response_data = f'WARNING: no hay conexión a la aplicación. Los cambios se guardaran localmente'
+    # Datos de prueba
+    sample_data = {
+        'id' : 1000,
+        'nombre' : 'James Bond',
+        'tipo_sanguineo' : 'A+',
+        'genero' : 'M',
+    }
 
+    json_data = json.dumps(sample_data)
+
+
+    try:
+        # cambios locales no sincronizados
+        if settings.UNSYNC_LOCAL_DB:
+            response_data = "Warning: cambios locales no se han sincronizado. Transacción será almacenada localmente."
+
+            # guarda transacción localmente
+            collection.insert_one({
+                'data': json_data,
+                'method': "POST"
+            })
+
+            return JsonResponse({'user_id': 1, 'external_data': response_data, 'sent_to_cloud': False}, status=200)
+
+        # intenta hacer POST a la app en nube
+        # TODO: Cambiar por request para probar fuera de pruebas
+        response = requests.post(url, data=json_data)
+
+        # POST exitoso
+        if response.status_code == 200:
+            response_data = response.text
+            return JsonResponse({'user_id': 1, 'external_data': response_data, 'sent_to_cloud': True}, status=200)
+
+        # POST fallido
+        response_data = "Warning: manejador de historias clínicas es inaccesible. Transacción será almacenada localmente."
+
+        # guarda transacción localmente
         collection.insert_one({
-            'path': request.path,
-            'body': request.body,
+            'data': json_data,
             'method': "POST"
         })
 
-    # envía el post real
-    else:
-        return post_real(request)
+        settings.UNSYNC_LOCAL_DB = True
 
-
-def post_real(request):
-    """
-    auhtor: @c4ts0up
-    Hace un POST de ejemplo. Si está conectado al LB, lo manda a la app en nube. Si no, guarda la petición en la base de datos local para realizarla después
-
-    Args:
-        request (_type_): _description_
-    """
-    url = settings.MANEJADOR_HC_URL + '/historia-clinica/create/'
-
-    if not settings.REMOTE_DB_ONLINE:
-        return JsonResponse({'user_id': 1, 'external_data': 'Error: la aplicación en nube es inaccesible'}, status_code=503)
+        return JsonResponse({'user_id': 1, 'external_data': response_data, 'sent_to_cloud': False}, status=200)
     
-    try:
-        response = requests.post(url,data=request.body)
-
-        if response.status_code == 204:
-            response_data = response.text
-            return JsonResponse({'user_id': 1, 'external_data': response_data})
-        else:
-            response_data = f'Error: {response.status_code}'
-            return JsonResponse({'user_id': 1, 'external_data': 'Error: la aplicación en nube es inaccesible'}, status_code=503)
+    # fallo en la conexión = POST fallido
     except:
-        return HttpResponse(503)
+        response_data = "Warning: cambios locales no se han sincronizado. Transacción será almacenada localmente."
+
+        # guarda transacción localmente
+        collection.insert_one({
+            'data': json_data,
+            'method': "POST"
+        })
+
+        return JsonResponse({'user_id': 1, 'external_data': response_data, 'sent_to_cloud': False}, status=200)
 
 
 @csrf_exempt
@@ -210,7 +240,63 @@ def put_test(request):
     author: @ppedreros
     Hace un PUT de ejemplo. Si está conectado al LB, lo manda a la app en nube. Si no, guarda la petición en la base de datos local para realizarla después
     """
-    pass
+    url = settings.MANEJADOR_HC_URL + '/historia-clinica/1'
+
+    # Datos de prueba
+    sample_data = {
+        'id' : 1000,
+        'nombre' : 'James H Bond',
+        'tipo_sanguineo' : 'AB+',
+        'genero' : 'H',
+    }
+
+    json_data = json.dumps(sample_data)
+
+    try:
+        # cambios locales no sincronizados
+        if settings.UNSYNC_LOCAL_DB:
+            response_data = "Warning: cambios locales no se han sincronizado. Transacción será almacenada localmente."
+
+            # guarda transacción localmente
+            collection.insert_one({
+                'data': json_data,
+                'method': "PUT"
+            })
+
+            return JsonResponse({'user_id': 1, 'external_data': response_data, 'sent_to_cloud': False}, status=200)
+
+        # intenta hacer PUT a la app en nube
+        response = requests.put(url, data=request.body)
+
+        # PUT exitoso
+        if response.status_code == 200:
+            response_data = response.text
+            return JsonResponse({'user_id': 1, 'external_data': response_data, 'sent_to_cloud': True}, status=200)
+
+        # PUT fallido
+        response_data = "Warning: manejador de historias clínicas es inaccesible. Transacción será almacenada localmente."
+
+        # guarda transacción localmente
+        collection.insert_one({
+            'data': json_data,
+            'method': "PUT"
+        })
+
+        settings.UNSYNC_LOCAL_DB = True
+
+        return JsonResponse({'user_id': 1, 'external_data': response_data, 'sent_to_cloud': False}, status=200)
+    
+
+    # fallo en la conexión = POST fallido
+    except:
+        response_data = "Warning: cambios locales no se han sincronizado. Transacción será almacenada localmente."
+
+        # guarda transacción localmente
+        collection.insert_one({
+            'data': json_data,
+            'method': "PUT"
+        })
+
+        return JsonResponse({'user_id': 1, 'external_data': response_data, 'sent_to_cloud': False}, status=200)
 
 
-def put_real(request):
