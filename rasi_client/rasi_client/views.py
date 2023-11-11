@@ -14,9 +14,6 @@ queue_client = pymongo.MongoClient("mongodb://localhost:27017/")
 dbname = queue_client['local_queue']
 collection = dbname['queries']
 
-def home(request):
-    return HttpResponse("Hello, Django!")
-
 @csrf_exempt
 def conciliacion_bd(request):
     """
@@ -30,10 +27,12 @@ def conciliacion_bd(request):
     print(count)
     while count != 0:
         query = collection.find_one()
-        #post_test(query)
+        post_test(query)
         collection.delete_one({"_id":query['_id']})
         count = collection.count_documents({})
     print(count)
+    settings.UNSYNC_LOCAL_DB = False
+
     
     return HttpResponse("OK")
 
@@ -63,7 +62,7 @@ def is_online(request):
         return False
 
 
-
+@csrf_exempt
 def heartbeat(request):
     """
     auhtor: @c4ts0up
@@ -117,8 +116,6 @@ def get_test(request):
     url = settings.MANEJADOR_HC_URL + '/historia-clinica/1'
     print(settings.REMOTE_DB_ONLINE)
     
-    # TODO: llamar al heartbeat o poner eso en un proceso paralelo?
-
     if not settings.REMOTE_DB_ONLINE:
         response_data = f'Error: {503}'
     elif settings.UNSYNC_LOCAL_DB:
@@ -143,37 +140,24 @@ def post_test(request):
     Args:
         request (_type_): _description_
     """
-    url = settings.MANEJADOR_HC_URL + '/historia-clinica/create/1'
+    url = settings.MANEJADOR_HC_URL + '/historia-clinica/create/'
 
     print(settings.REMOTE_DB_ONLINE)
-    
-    # TODO: llamar al heartbeat o poner eso en un proceso paralelo
-
-    sample = {
-        'name': 'James Bond',
-        'tipo-sanguineo': 'A+',
-        'fecha_nacimiento': '02-02-1990'
-    }
-
-    if not settings.REMOTE_DB_ONLINE:
-        response_data = f'Error: {503}'
-    elif settings.UNSYNC_LOCAL_DB:
+    print(request)
+    if not settings.REMOTE_DB_ONLINE or settings.UNSYNC_LOCAL_DB:
         response_data = f'WARNING: no hay conexión a la aplicación. Los cambios se guardaran localmente'
 
-        # TODO: guardar cambios localmente
+        collection.insert_one({'path':request.path,'body':request.body,'method':request.method})
 
     else:
-        response = requests.get(url)
+        response = requests.post(url,data=request.body)
 
-        if response.status_code == 200:
+        if response.status_code == 204:
             response_data = response.text
         else:
             response_data = f'Error: {response.status_code}'
 
-
     return JsonResponse({'user_id': 1, 'external_data': response_data})
-
-    return HttpResponse("OK")
 
 @csrf_exempt
 def put_test(request):
@@ -182,4 +166,3 @@ def put_test(request):
     Hace un PUT de ejemplo. Si está conectado al LB, lo manda a la app en nube. Si no, guarda la petición en la base de datos local para realizarla después
     """
     pass
-
