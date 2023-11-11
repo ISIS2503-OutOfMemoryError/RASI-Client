@@ -127,3 +127,5 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 ###########################################################################
 
 REMOTE_DB_ONLINE = False
+MANEJADOR_HC_URL = 'http://localhost:42069'
+UNSYNC_LOCAL_DB = False
