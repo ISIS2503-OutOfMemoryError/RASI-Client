@@ -1,0 +1,474 @@
+{
+	"info": {
+		"_postman_id": "09bf4d6e-baee-46ad-b473-6e9f0b51f2fc",
+		"name": "RASI Mod Citas Médicas",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25792967"
+	},
+	"item": [
+		{
+			"name": "Obtener una historia clínica ONLINE",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"   pm.response.to.have.status(200);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pacientes/{{idPaciente1}}/historia-clinica/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pacientes",
+						"{{idPaciente1}}",
+						"historia-clinica",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener una historia clínica OFFLINE",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 503\", function () {\r",
+							"   pm.response.to.have.status(503);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Check error message\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.external_data).to.eql(\"Error: manejador de historias clínicas es inaccesible.\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pacientes/{{idPaciente1}}/historia-clinica/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pacientes",
+						"{{idPaciente1}}",
+						"historia-clinica",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Obtener una historia clínica UNSYNCED",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 500\", function () {\r",
+							"   pm.response.to.have.status(500);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Check error message\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.external_data).to.eql(\"Error: cambios locales no se han sincronizado.\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pacientes/{{idPaciente1}}/historia-clinica/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pacientes",
+						"{{idPaciente1}}",
+						"historia-clinica",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear historia clínica ONLINE",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 201\", function () {\r",
+							"   pm.response.to.have.status(201);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\" : 1000,\r\n    \"nombre\" : \"James H Bond\",\r\n    \"tipo_sanguineo\" : \"AB+\",\r\n    \"genero\" : \"H\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pacientes/{{idPaciente1}}/historia-clinica/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pacientes",
+						"{{idPaciente1}}",
+						"historia-clinica",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear historia clínica OFFLINE",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"   pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Check error message\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.external_data).to.eql(\"Warning: cambios locales no se han sincronizado. Transacción será almacenada localmente.\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\" : 1000,\r\n    \"nombre\" : \"James H Bond\",\r\n    \"tipo_sanguineo\" : \"AB+\",\r\n    \"genero\" : \"H\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pacientes/{{idPaciente1}}/historia-clinica/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pacientes",
+						"{{idPaciente1}}",
+						"historia-clinica",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Crear historia clínica UNSYNCED",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"   pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Check error message\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.external_data).to.eql(\"Warning: cambios locales no se han sincronizado. Transacción será almacenada localmente.\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\" : 1000,\r\n    \"nombre\" : \"James H Bond\",\r\n    \"tipo_sanguineo\" : \"AB+\",\r\n    \"genero\" : \"H\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pacientes/{{idPaciente1}}/historia-clinica/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pacientes",
+						"{{idPaciente1}}",
+						"historia-clinica",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar historia clínica ONLINE",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 204\", function () {\r",
+							"   pm.response.to.have.status(204);\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\" : 1000,\r\n    \"nombre\" : \"James H Bond\",\r\n    \"tipo_sanguineo\" : \"AB+\",\r\n    \"genero\" : \"H\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pacientes/{{idPaciente1}}/historia-clinica/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pacientes",
+						"{{idPaciente1}}",
+						"historia-clinica",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar historia clínica OFFLINE",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"   pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Check error message\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.external_data).to.eql(\"Warning: cambios locales no se han sincronizado. Transacción será almacenada localmente.\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\" : 1000,\r\n    \"nombre\" : \"James H Bond\",\r\n    \"tipo_sanguineo\" : \"AB+\",\r\n    \"genero\" : \"H\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pacientes/{{idPaciente1}}/historia-clinica/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pacientes",
+						"{{idPaciente1}}",
+						"historia-clinica",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Actualizar historia clínica UNSYNCED",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"   pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Check error message\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.external_data).to.eql(\"Warning: cambios locales no se han sincronizado. Transacción será almacenada localmente.\");\r",
+							"});\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "PUT",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"id\" : 1000,\r\n    \"nombre\" : \"James H Bond\",\r\n    \"tipo_sanguineo\" : \"AB+\",\r\n    \"genero\" : \"H\"\r\n}\r\n",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{baseUrl}}/pacientes/{{idPaciente1}}/historia-clinica/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pacientes",
+						"{{idPaciente1}}",
+						"historia-clinica",
+						""
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Conciliar historias clínicas OFFLINE",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"   pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"No unsynced transactions discarded\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.local_unsync_transactions).to.be.above(0);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pacientes/conciliar/historias-clinicas",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pacientes",
+						"conciliar",
+						"historias-clinicas"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Conciliar historias clínicas ONLINE Full",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code is 200\", function () {\r",
+							"   pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"No unsynced transactions discarded\", function () {\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.expect(jsonData.local_unsync_transactions).to.be.eql(0);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/pacientes/conciliar/historias-clinicas",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						"pacientes",
+						"conciliar",
+						"historias-clinicas"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
